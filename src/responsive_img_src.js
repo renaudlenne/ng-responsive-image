@@ -21,13 +21,11 @@
         image_is_loaded: '=?imageIsLoaded'
       },
       link: function linkResponsiveSrc (scope, element, attrs) {
-        var width, height, ratio, unwatch, deferred;
+        var width, height, ratio, unwatch, deferred, visibilityWatcher;
 
         deferred = $q.defer();
+        scope.element = element[0];
         scope.image_is_loaded = deferred.promise;
-
-        // Calculate the constraints. We only need to do this once.
-        constraints();
 
         function waitForFirstLoad () {
 
@@ -89,9 +87,6 @@
             updateImage();
           });
         }
-
-        // Start waiting for the first load
-        waitForFirstLoad();
 
         function updateImage () {
           // Use our matcher to get the URL we'll be using for the image
@@ -166,6 +161,22 @@
             return;
           }
         }
+
+        // Wait for element to be visible
+        visibilityWatcher = scope.$watchGroup(['element.clientWidth','element.clientHeight'], function() {
+          if(element[0].clientWidth !== 0 && element[0].clientHeight !== 0) {
+
+            // Stop watching for visibility
+            visibilityWatcher();
+
+            // Calculate the constraints. We only need to do this once.
+            constraints();
+
+            // Start waiting for the first load
+            waitForFirstLoad();
+          }
+        });
+
       }
     };
   }
